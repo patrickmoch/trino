@@ -123,8 +123,7 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @TestInstance(PER_CLASS)
 @Execution(SAME_THREAD)
 public class TestDeltaLakeBasic
-        extends AbstractTestQueryFramework
-{
+        extends AbstractTestQueryFramework {
     private static final JsonMapper JSON_MAPPER = new JsonMapperProvider().get();
 
     private static final List<ResourceTable> PERSON_TABLES = ImmutableList.of(
@@ -169,8 +168,7 @@ public class TestDeltaLakeBasic
 
     @Override
     protected QueryRunner createQueryRunner()
-            throws Exception
-    {
+            throws Exception {
         catalogDir = Files.createTempDirectory("catalog-dir");
         closeAfterClass(() -> deleteRecursively(catalogDir, ALLOW_INSECURE));
 
@@ -183,8 +181,7 @@ public class TestDeltaLakeBasic
     }
 
     @BeforeAll
-    public void registerTables()
-    {
+    public void registerTables() {
         for (ResourceTable table : Iterables.concat(PERSON_TABLES, OTHER_TABLES)) {
             String dataPath = getResourceLocation(table.resourcePath()).toExternalForm();
             getQueryRunner().execute(
@@ -192,8 +189,7 @@ public class TestDeltaLakeBasic
         }
     }
 
-    private URL getResourceLocation(String resourcePath)
-    {
+    private URL getResourceLocation(String resourcePath) {
         return getClass().getClassLoader().getResource(resourcePath);
     }
 
@@ -202,8 +198,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testLoadingParquetColumnIndexWithNonStatsColumn()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_parquet_column_index_with_non_stats_column_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks173/parquet_column_index_with_non_stats_column").toURI()).toPath(), tableLocation);
@@ -215,8 +210,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    public void testDescribeTable()
-    {
+    public void testDescribeTable() {
         for (ResourceTable table : PERSON_TABLES) {
             // the schema is actually defined in the transaction log
             assertQuery(
@@ -233,8 +227,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    public void testSimpleQueries()
-    {
+    public void testSimpleQueries() {
         for (ResourceTable table : PERSON_TABLES) {
             assertQuery(format("SELECT COUNT(*) FROM %s", table.tableName()), "VALUES 12");
             assertQuery(format("SELECT income FROM %s WHERE name = 'Bob'", table.tableName()), "VALUES 99000.00");
@@ -246,40 +239,35 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    void testDatabricks91()
-    {
+    void testDatabricks91() {
         assertThat(query("SELECT * FROM region_91_lts"))
                 .skippingTypesCheck() // name and comment columns are unbounded varchar in Delta Lake and bounded varchar in TPCH
                 .matches("SELECT * FROM tpch.tiny.region");
     }
 
     @Test
-    void testDatabricks104()
-    {
+    void testDatabricks104() {
         assertThat(query("SELECT * FROM region_104_lts"))
                 .skippingTypesCheck() // name and comment columns are unbounded varchar in Delta Lake and bounded varchar in TPCH
                 .matches("SELECT * FROM tpch.tiny.region");
     }
 
     @Test
-    void testDatabricks113()
-    {
+    void testDatabricks113() {
         assertThat(query("SELECT * FROM region_113_lts"))
                 .skippingTypesCheck() // name and comment columns are unbounded varchar in Delta Lake and bounded varchar in TPCH
                 .matches("SELECT * FROM tpch.tiny.region");
     }
 
     @Test
-    void testDatabricks122()
-    {
+    void testDatabricks122() {
         assertThat(query("SELECT * FROM region_122_lts"))
                 .skippingTypesCheck() // name and comment columns are unbounded varchar in Delta Lake and bounded varchar in TPCH
                 .matches("SELECT * FROM tpch.tiny.region");
     }
 
     @Test
-    public void testNoColumnStats()
-    {
+    public void testNoColumnStats() {
         // The table was created with delta.dataSkippingNumIndexedCols=0 property
         assertQuery("SELECT c_str FROM no_column_stats WHERE c_int = 42", "VALUES 'foo'");
     }
@@ -290,15 +278,13 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testAddNestedColumnWithColumnMappingMode()
-            throws Exception
-    {
+            throws Exception {
         testAddNestedColumnWithColumnMappingMode("id");
         testAddNestedColumnWithColumnMappingMode("name");
     }
 
     private void testAddNestedColumnWithColumnMappingMode(String columnMappingMode)
-            throws Exception
-    {
+            throws Exception {
         // The table contains 'x' column with column mapping mode
         String tableName = "test_add_column_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -366,8 +352,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     void testDatabricksWriteCheckpointOnSchemaChange()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_dbx_write_checkpoint_on_schema_change" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks164/test_write_checkpoint_on_schema_change").toURI()).toPath(), tableLocation);
@@ -407,8 +392,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    void testWriteCheckpointOnSchemaChange()
-    {
+    void testWriteCheckpointOnSchemaChange() {
         try (TestTable table = newTrinoTable("test_write_checkpoint_on_schema_change", "(x int) WITH (checkpoint_interval = 2)")) {
             Path tableLocation = Path.of(getTableLocation(table.getName()).replace("file://", ""));
 
@@ -461,8 +445,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    void testWriteCheckpointOnSchemaChangeCTAS()
-    {
+    void testWriteCheckpointOnSchemaChangeCTAS() {
         try (TestTable table = newTrinoTable("test_write_checkpoint_on_schema_change", "(x int) WITH (checkpoint_interval = 2)")) {
             Path tableLocation = Path.of(getTableLocation(table.getName()).replace("file://", ""));
 
@@ -511,8 +494,7 @@ public class TestDeltaLakeBasic
 
     @Test
     void testCreateOrReplacePreservesFeatures()
-            throws Exception
-    {
+            throws Exception {
         try (TestTable table = newTrinoTable("test_create_or_replace_preserves_features_", "(x int) WITH (deletion_vectors_enabled = true)")) {
             assertThat((String) computeScalar("SHOW CREATE TABLE " + table.getName()))
                     .contains("deletion_vectors_enabled = true");
@@ -530,10 +512,10 @@ public class TestDeltaLakeBasic
         }
     }
 
-    @Test // regression test for https://github.com/trinodb/trino/issues/24121
+    @Test
+        // regression test for https://github.com/trinodb/trino/issues/24121
     void testPartitionValuesParsedCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         for (ColumnMappingMode mode : List.of(ColumnMappingMode.ID, ColumnMappingMode.NAME, ColumnMappingMode.NONE)) {
             testPartitionValuesParsedCheckpoint(mode, "boolean", ImmutableList.of("true", "false"), ImmutableList.of(true, false));
             testPartitionValuesParsedCheckpoint(mode, "tinyint", ImmutableList.of("10", "20"), ImmutableList.of(Byte.valueOf("10"), Byte.valueOf("20")));
@@ -571,8 +553,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testPartitionValuesParsedCheckpoint(ColumnMappingMode columnMappingMode, String inputType, List<String> inputValues, List<Object> expectedPartitionValuesParsed)
-            throws Exception
-    {
+            throws Exception {
         checkArgument(inputValues.size() == 2, "inputValues size must be 2");
         checkArgument(expectedPartitionValuesParsed.size() == 2, "expectedPartitionValuesParsed size must be 2");
 
@@ -594,8 +575,7 @@ public class TestDeltaLakeBasic
             String physicalColumnName = partitionColumn.basePhysicalColumnName();
             if (columnMappingMode == ColumnMappingMode.ID || columnMappingMode == ColumnMappingMode.NAME) {
                 assertThat(physicalColumnName).matches(PHYSICAL_COLUMN_NAME_PATTERN);
-            }
-            else {
+            } else {
                 assertThat(physicalColumnName).isEqualTo("part");
             }
 
@@ -634,15 +614,13 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testOptimizeWithColumnMappingMode()
-            throws Exception
-    {
+            throws Exception {
         testOptimizeWithColumnMappingMode("id");
         testOptimizeWithColumnMappingMode("name");
     }
 
     private void testOptimizeWithColumnMappingMode(String columnMappingMode)
-            throws Exception
-    {
+            throws Exception {
         // The table contains 'x' column with column mapping mode
         String tableName = "test_optimize_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -693,8 +671,7 @@ public class TestDeltaLakeBasic
         assertThat(physicalType.getName()).isEqualTo(physicalName);
         if (columnMappingMode.equals("id")) {
             assertThat(physicalType.getId().intValue()).isEqualTo(id);
-        }
-        else {
+        } else {
             assertThat(physicalType.getId()).isNull();
         }
     }
@@ -705,15 +682,13 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDropColumnWithColumnMappingMode()
-            throws Exception
-    {
+            throws Exception {
         testDropColumnWithColumnMappingMode("id");
         testDropColumnWithColumnMappingMode("name");
     }
 
     private void testDropColumnWithColumnMappingMode(String columnMappingMode)
-            throws Exception
-    {
+            throws Exception {
         // The table contains 'x' column with column mapping mode
         String tableName = "test_add_column_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -759,15 +734,13 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testRenameColumnWithColumnMappingMode()
-            throws Exception
-    {
+            throws Exception {
         testRenameColumnWithColumnMappingMode("id");
         testRenameColumnWithColumnMappingMode("name");
     }
 
     private void testRenameColumnWithColumnMappingMode(String columnMappingMode)
-            throws Exception
-    {
+            throws Exception {
         // The table contains 'x' column with column mapping mode
         String tableName = "test_rename_column_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -816,15 +789,13 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testWriterAfterRenameColumnWithColumnMappingMode()
-            throws Exception
-    {
+            throws Exception {
         testWriterAfterRenameColumnWithColumnMappingMode("id");
         testWriterAfterRenameColumnWithColumnMappingMode("name");
     }
 
     private void testWriterAfterRenameColumnWithColumnMappingMode(String columnMappingMode)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_writer_after_rename_column_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/column_mapping_mode_" + columnMappingMode).toURI()).toPath(), tableLocation);
@@ -854,8 +825,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testRequiresQueryPartitionFilterWithUppercaseColumnName()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_require_partition_filter_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/case_sensitive").toURI()).toPath(), tableLocation);
@@ -880,8 +850,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testAppendOnly()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_append_only_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/append_only").toURI()).toPath(), tableLocation);
@@ -904,8 +873,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testCreateOrReplaceTableOnAppendOnlyTableFails()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_append_only_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/append_only").toURI()).toPath(), tableLocation);
@@ -923,8 +891,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testStatisticsWithColumnCaseSensitivity()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_column_case_sensitivity_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/case_sensitive").toURI()).toPath(), tableLocation);
@@ -955,22 +922,22 @@ public class TestDeltaLakeBasic
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('upper_case', null, 2.0, 0.3333333333333333, null, 20, 30),
-                ('part', null, 1.0, 0.0, null, null, null),
-                (null, null, null, null, 3.0, null, null)
-                """);
+                        VALUES
+                        ('upper_case', null, 2.0, 0.3333333333333333, null, 20, 30),
+                        ('part', null, 1.0, 0.0, null, null, null),
+                        (null, null, null, null, 3.0, null, null)
+                        """);
 
         assertUpdate(format("ANALYZE %s WITH(mode = 'full_refresh')", tableName), 3);
 
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('upper_case', null, 2.0, 0.3333333333333333, null, 20, 30),
-                ('part', null, 1.0, 0.0, null, null, null),
-                (null, null, null, null, 3.0, null, null)
-                """);
+                        VALUES
+                        ('upper_case', null, 2.0, 0.3333333333333333, null, 20, 30),
+                        ('part', null, 1.0, 0.0, null, null, null),
+                        (null, null, null, null, 3.0, null, null)
+                        """);
     }
 
     /**
@@ -978,8 +945,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeltaTimestampNtz()
-            throws Exception
-    {
+            throws Exception {
         testDeltaTimestampNtz(UTC);
         testDeltaTimestampNtz(jvmZone);
         // using two non-JVM zones so that we don't need to worry what Postgres system zone is
@@ -989,8 +955,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testDeltaTimestampNtz(ZoneId sessionZone)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "timestamp_ntz" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks131/timestamp_ntz").toURI()).toPath(), tableLocation);
@@ -1008,23 +973,23 @@ public class TestDeltaLakeBasic
         assertThat(query(session, "SELECT * FROM " + tableName))
                 .matches(
                         """
-                        VALUES
-                        NULL,
-                        TIMESTAMP '-9999-12-31 23:59:59.999999',
-                        TIMESTAMP '-0001-01-01 00:00:00',
-                        TIMESTAMP '0000-01-01 00:00:00',
-                        TIMESTAMP '1582-10-05 00:00:00',
-                        TIMESTAMP '1582-10-14 23:59:59.999999',
-                        TIMESTAMP '2020-12-31 01:02:03.123456',
-                        TIMESTAMP '9999-12-31 23:59:59.999999'
-                        """);
+                                VALUES
+                                NULL,
+                                TIMESTAMP '-9999-12-31 23:59:59.999999',
+                                TIMESTAMP '-0001-01-01 00:00:00',
+                                TIMESTAMP '0000-01-01 00:00:00',
+                                TIMESTAMP '1582-10-05 00:00:00',
+                                TIMESTAMP '1582-10-14 23:59:59.999999',
+                                TIMESTAMP '2020-12-31 01:02:03.123456',
+                                TIMESTAMP '9999-12-31 23:59:59.999999'
+                                """);
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('x', null, null, 0.125, null, null, null),
-                (null, null, null, null, 8.0, null, null)
-                """);
+                        VALUES
+                        ('x', null, null, 0.125, null, null, null),
+                        (null, null, null, null, 8.0, null, null)
+                        """);
 
         // Verify the connector can insert into tables created by Databricks
         assertUpdate(session, "INSERT INTO " + tableName + " VALUES TIMESTAMP '2023-01-02 03:04:05.123456'", 1);
@@ -1032,18 +997,17 @@ public class TestDeltaLakeBasic
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('x', null, 1.0, 0.1111111111111111, null, '2023-01-02 03:04:05.123000', '2023-01-02 03:04:05.124000'),
-                (null, null, null, null, 9.0, null, null)
-                """);
+                        VALUES
+                        ('x', null, 1.0, 0.1111111111111111, null, '2023-01-02 03:04:05.123000', '2023-01-02 03:04:05.124000'),
+                        (null, null, null, null, 9.0, null, null)
+                        """);
 
         assertUpdate("DROP TABLE " + tableName);
     }
 
     @Test
     public void testTrinoCreateTableWithTimestampNtz()
-            throws Exception
-    {
+            throws Exception {
         testTrinoCreateTableWithTimestampNtz(UTC);
         testTrinoCreateTableWithTimestampNtz(jvmZone);
         // using two non-JVM zones so that we don't need to worry what Postgres system zone is
@@ -1053,8 +1017,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testTrinoCreateTableWithTimestampNtz(ZoneId sessionZone)
-            throws Exception
-    {
+            throws Exception {
         testTrinoCreateTableWithTimestampNtz(
                 sessionZone,
                 tableName -> {
@@ -1065,8 +1028,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTrinoCreateTableAsSelectWithTimestampNtz()
-            throws Exception
-    {
+            throws Exception {
         testTrinoCreateTableAsSelectWithTimestampNtz(UTC);
         testTrinoCreateTableAsSelectWithTimestampNtz(jvmZone);
         // using two non-JVM zones so that we don't need to worry what Postgres system zone is
@@ -1076,16 +1038,14 @@ public class TestDeltaLakeBasic
     }
 
     private void testTrinoCreateTableAsSelectWithTimestampNtz(ZoneId sessionZone)
-            throws Exception
-    {
+            throws Exception {
         testTrinoCreateTableWithTimestampNtz(
                 sessionZone,
                 tableName -> assertUpdate("CREATE TABLE " + tableName + " AS SELECT timestamp '2023-01-02 03:04:05.123456' AS x", 1));
     }
 
     private void testTrinoCreateTableWithTimestampNtz(ZoneId sessionZone, Consumer<String> createTable)
-            throws IOException
-    {
+            throws IOException {
         String tableName = "test_create_table_timestamp_ntz" + randomNameSuffix();
 
         Session session = Session.builder(getSession())
@@ -1110,46 +1070,45 @@ public class TestDeltaLakeBasic
         assertUpdate(session,
                 "INSERT INTO " + tableName + " " +
                         """
-                        VALUES
-                        NULL,
-                        TIMESTAMP '-9999-12-31 23:59:59.999999',
-                        TIMESTAMP '-0001-01-01 00:00:00',
-                        TIMESTAMP '0000-01-01 00:00:00',
-                        TIMESTAMP '1582-10-05 00:00:00',
-                        TIMESTAMP '1582-10-14 23:59:59.999999',
-                        TIMESTAMP '2020-12-31 01:02:03.123456',
-                        TIMESTAMP '9999-12-31 23:59:59.999999'
-                        """,
+                                VALUES
+                                NULL,
+                                TIMESTAMP '-9999-12-31 23:59:59.999999',
+                                TIMESTAMP '-0001-01-01 00:00:00',
+                                TIMESTAMP '0000-01-01 00:00:00',
+                                TIMESTAMP '1582-10-05 00:00:00',
+                                TIMESTAMP '1582-10-14 23:59:59.999999',
+                                TIMESTAMP '2020-12-31 01:02:03.123456',
+                                TIMESTAMP '9999-12-31 23:59:59.999999'
+                                """,
                 8);
 
         assertThat(query(session, "SELECT * FROM " + tableName))
                 .matches(
                         """
-                        VALUES
-                        NULL,
-                        TIMESTAMP '-9999-12-31 23:59:59.999999',
-                        TIMESTAMP '-0001-01-01 00:00:00',
-                        TIMESTAMP '0000-01-01 00:00:00',
-                        TIMESTAMP '1582-10-05 00:00:00',
-                        TIMESTAMP '1582-10-14 23:59:59.999999',
-                        TIMESTAMP '2020-12-31 01:02:03.123456',
-                        TIMESTAMP '2023-01-02 03:04:05.123456',
-                        TIMESTAMP '9999-12-31 23:59:59.999999'
-                        """);
+                                VALUES
+                                NULL,
+                                TIMESTAMP '-9999-12-31 23:59:59.999999',
+                                TIMESTAMP '-0001-01-01 00:00:00',
+                                TIMESTAMP '0000-01-01 00:00:00',
+                                TIMESTAMP '1582-10-05 00:00:00',
+                                TIMESTAMP '1582-10-14 23:59:59.999999',
+                                TIMESTAMP '2020-12-31 01:02:03.123456',
+                                TIMESTAMP '2023-01-02 03:04:05.123456',
+                                TIMESTAMP '9999-12-31 23:59:59.999999'
+                                """);
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('x', null, 8.0, 0.1111111111111111, null, '2023-01-02 03:04:05.123000', '+10000-01-01 00:00:00.000000'),
-                (null, null, null, null, 9.0, null, null)
-                """);
+                        VALUES
+                        ('x', null, 8.0, 0.1111111111111111, null, '2023-01-02 03:04:05.123000', '+10000-01-01 00:00:00.000000'),
+                        (null, null, null, null, 9.0, null, null)
+                        """);
 
         assertUpdate("DROP TABLE " + tableName);
     }
 
     @Test
-    public void testTrinoTimestampNtzComplexType()
-    {
+    public void testTrinoTimestampNtzComplexType() {
         testTrinoTimestampNtzComplexType(UTC);
         testTrinoTimestampNtzComplexType(jvmZone);
         // using two non-JVM zones so that we don't need to worry what Postgres system zone is
@@ -1158,8 +1117,7 @@ public class TestDeltaLakeBasic
         testTrinoTimestampNtzComplexType(TestingSession.DEFAULT_TIME_ZONE_KEY.getZoneId());
     }
 
-    private void testTrinoTimestampNtzComplexType(ZoneId sessionZone)
-    {
+    private void testTrinoTimestampNtzComplexType(ZoneId sessionZone) {
         String tableName = "test_timestamp_ntz_complex_type" + randomNameSuffix();
 
         assertUpdate("CREATE TABLE " + tableName + "(id int, array_col array(timestamp(6)), map_col map(timestamp(6), timestamp(6)), row_col row(child timestamp(6)))");
@@ -1172,35 +1130,35 @@ public class TestDeltaLakeBasic
                 session,
                 "INSERT INTO " + tableName + " " +
                         """
-                        VALUES (
-                         1,
-                         ARRAY[TIMESTAMP '2020-12-31 01:02:03.123456'],
-                         MAP(ARRAY[TIMESTAMP '2021-12-31 01:02:03.123456'], ARRAY[TIMESTAMP '2022-12-31 01:02:03.123456']),
-                         ROW(TIMESTAMP '2023-12-31 01:02:03.123456')
-                        )
-                        """,
+                                VALUES (
+                                 1,
+                                 ARRAY[TIMESTAMP '2020-12-31 01:02:03.123456'],
+                                 MAP(ARRAY[TIMESTAMP '2021-12-31 01:02:03.123456'], ARRAY[TIMESTAMP '2022-12-31 01:02:03.123456']),
+                                 ROW(TIMESTAMP '2023-12-31 01:02:03.123456')
+                                )
+                                """,
                 1);
 
         assertThat(query(session, "SELECT * FROM " + tableName))
                 .matches(
                         """
-                        VALUES (
-                         1,
-                         ARRAY[TIMESTAMP '2020-12-31 01:02:03.123456'],
-                         MAP(ARRAY[TIMESTAMP '2021-12-31 01:02:03.123456'], ARRAY[TIMESTAMP '2022-12-31 01:02:03.123456']),
-                         CAST(ROW(TIMESTAMP '2023-12-31 01:02:03.123456') AS ROW(child timestamp(6)))
-                        )
-                        """);
+                                VALUES (
+                                 1,
+                                 ARRAY[TIMESTAMP '2020-12-31 01:02:03.123456'],
+                                 MAP(ARRAY[TIMESTAMP '2021-12-31 01:02:03.123456'], ARRAY[TIMESTAMP '2022-12-31 01:02:03.123456']),
+                                 CAST(ROW(TIMESTAMP '2023-12-31 01:02:03.123456') AS ROW(child timestamp(6)))
+                                )
+                                """);
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('id', null, 1.0, 0.0, null, 1, 1),
-                ('array_col', null, null, null, null, null, null),
-                ('map_col', null, null, null, null, null, null),
-                ('row_col', null, null, null, null, null, null),
-                (null, null, null, null, 1.0, null, null)
-                """);
+                        VALUES
+                        ('id', null, 1.0, 0.0, null, 1, 1),
+                        ('array_col', null, null, null, null, null, null),
+                        ('map_col', null, null, null, null, null, null),
+                        ('row_col', null, null, null, null, null, null),
+                        (null, null, null, null, 1.0, null, null)
+                        """);
 
         assertUpdate("DROP TABLE " + tableName);
     }
@@ -1210,8 +1168,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testTimestampNtzPartitioned()
-            throws Exception
-    {
+            throws Exception {
         testTimestampNtzPartitioned(UTC);
         testTimestampNtzPartitioned(jvmZone);
         // using two non-JVM zones so that we don't need to worry what Postgres system zone is
@@ -1221,8 +1178,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testTimestampNtzPartitioned(ZoneId sessionZone)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "timestamp_ntz_partition" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks131/timestamp_ntz_partition").toURI()).toPath(), tableLocation);
@@ -1241,26 +1197,26 @@ public class TestDeltaLakeBasic
         assertThat(query(session, "SELECT * FROM " + tableName))
                 .matches(
                         """
-                            VALUES
-                            (1, NULL),
-                            (2, TIMESTAMP '-9999-12-31 23:59:59.999999'),
-                            (3, TIMESTAMP '-0001-01-01 00:00:00'),
-                            (4, TIMESTAMP '0000-01-01 00:00:00'),
-                            (5, TIMESTAMP '1582-10-05 00:00:00'),
-                            (6, TIMESTAMP '1582-10-14 23:59:59.999999'),
-                            (7, TIMESTAMP '2020-12-31 01:02:03.123456'),
-                            (8, TIMESTAMP '9999-12-31 23:59:59.999999')
-                        """);
+                                    VALUES
+                                    (1, NULL),
+                                    (2, TIMESTAMP '-9999-12-31 23:59:59.999999'),
+                                    (3, TIMESTAMP '-0001-01-01 00:00:00'),
+                                    (4, TIMESTAMP '0000-01-01 00:00:00'),
+                                    (5, TIMESTAMP '1582-10-05 00:00:00'),
+                                    (6, TIMESTAMP '1582-10-14 23:59:59.999999'),
+                                    (7, TIMESTAMP '2020-12-31 01:02:03.123456'),
+                                    (8, TIMESTAMP '9999-12-31 23:59:59.999999')
+                                """);
         assertQuery(session, "SELECT id FROM " + tableName + " WHERE part = TIMESTAMP '2020-12-31 01:02:03.123456'", "VALUES 7");
 
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('id', null, null, 0.0, null, 1, 8),
-                ('part', null, 7.0, 0.125, null, null, null),
-                (null, null, null, null, 8.0, null, null)
-                """);
+                        VALUES
+                        ('id', null, null, 0.0, null, 1, 8),
+                        ('part', null, 7.0, 0.125, null, null, null),
+                        (null, null, null, null, 8.0, null, null)
+                        """);
 
         // Verify the connector can insert into tables created by Databricks
         assertUpdate(session, "INSERT INTO " + tableName + " VALUES (9, TIMESTAMP '2023-01-02 03:04:05.123456')", 1);
@@ -1269,11 +1225,11 @@ public class TestDeltaLakeBasic
         assertQuery(
                 "SHOW STATS FOR " + tableName,
                 """
-                VALUES
-                ('id', null, 1.0, 0.0, null, 1, 9),
-                ('part', null, 8.0, 0.1111111111111111, null, null, null),
-                (null, null, null, null, 9.0, null, null)
-                """);
+                        VALUES
+                        ('id', null, 1.0, 0.0, null, 1, 9),
+                        ('part', null, 8.0, 0.1111111111111111, null, null, null),
+                        (null, null, null, null, 9.0, null, null)
+                        """);
         List<DeltaLakeTransactionLogEntry> transactionLogs = getEntriesFromJson(2, tableLocation.resolve("_delta_log").toString());
         assertThat(transactionLogs).hasSize(2);
         AddFileEntry addFileEntry = transactionLogs.get(1).getAdd();
@@ -1286,8 +1242,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testAddTimestampNtzColumn()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_add_timestamp_ntz_column" + randomNameSuffix();
 
         assertUpdate("CREATE TABLE " + tableName + "(id INT)");
@@ -1320,8 +1275,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testIdentityColumns()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_identity_columns_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks122/identity_columns").toURI()).toPath(), tableLocation);
@@ -1354,8 +1308,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testWritesToTableWithIdentityColumnFails()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_identity_columns_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks122/identity_columns").toURI()).toPath(), tableLocation);
@@ -1381,8 +1334,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testIdentityColumnTableFeature()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_identity_columns_table_feature_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks133/identity_columns_table_feature").toURI()).toPath(), tableLocation);
@@ -1407,8 +1359,7 @@ public class TestDeltaLakeBasic
      * @see deltalake.allow_column_defaults
      */
     @Test
-    public void testAllowColumnDefaults()
-    {
+    public void testAllowColumnDefaults() {
         assertQuery("SELECT * FROM allow_column_defaults", "VALUES (1, 16)");
 
         // TODO (https://github.com/trinodb/trino/issues/22413) Add support for allowColumnDefaults writer feature
@@ -1418,15 +1369,13 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsEnabledCreateTable()
-            throws Exception
-    {
+            throws Exception {
         testDeletionVectorsEnabledCreateTable("(x int) WITH (deletion_vectors_enabled = true)");
         testDeletionVectorsEnabledCreateTable("WITH (deletion_vectors_enabled = true) AS SELECT 1 x");
     }
 
     private void testDeletionVectorsEnabledCreateTable(String tableDefinition)
-            throws Exception
-    {
+            throws Exception {
         try (TestTable table = newTrinoTable("deletion_vectors", tableDefinition)) {
             assertThat((String) computeScalar("SHOW CREATE TABLE " + table.getName()))
                     .contains("deletion_vectors_enabled = true");
@@ -1451,15 +1400,13 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsDisabledCreateTable()
-            throws Exception
-    {
+            throws Exception {
         testDeletionVectorsDisabledCreateTable("(x int) WITH (deletion_vectors_enabled = false)");
         testDeletionVectorsDisabledCreateTable("WITH (deletion_vectors_enabled = false) AS SELECT 1 x");
     }
 
     private void testDeletionVectorsDisabledCreateTable(String tableDefinition)
-            throws Exception
-    {
+            throws Exception {
         try (TestTable table = newTrinoTable("deletion_vectors", tableDefinition)) {
             assertThat((String) computeScalar("SHOW CREATE TABLE " + table.getName()))
                     .doesNotContain("deletion_vectors_enabled");
@@ -1484,15 +1431,13 @@ public class TestDeltaLakeBasic
 
     @Test
     void testDeletionVectorsEnabledWriteCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         testDeletionVectorsEnabledWriteCheckpoint("(x int) WITH (deletion_vectors_enabled = true, checkpoint_interval = 2)");
         testDeletionVectorsEnabledWriteCheckpoint("WITH (deletion_vectors_enabled = true, checkpoint_interval = 2) AS SELECT 1 x");
     }
 
     private void testDeletionVectorsEnabledWriteCheckpoint(String tableDefinition)
-            throws Exception
-    {
+            throws Exception {
         try (TestTable table = newTrinoTable("deletion_vectors", tableDefinition)) {
             String tableLocation = getTableLocation(table.getName());
             List<DeltaLakeTransactionLogEntry> transactionLogs = getEntriesFromJson(0, tableLocation + "/_delta_log");
@@ -1538,8 +1483,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeletionVectors()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1574,8 +1518,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsAllRows()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1612,8 +1555,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsLargeDelete()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1631,8 +1573,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsCheckPoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1654,8 +1595,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeletionVectorsRandomPrefix()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors_random_prefix" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1673,8 +1613,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    void testDeletionVectorsRepeat()
-    {
+    void testDeletionVectorsRepeat() {
         try (TestTable table = newTrinoTable("test_dv", "(x int) WITH (deletion_vectors_enabled = true)", List.of("1", "2", "3"))) {
             assertUpdate("DELETE FROM " + table.getName() + " WHERE x = 1", 1);
             assertUpdate("DELETE FROM " + table.getName() + " WHERE x = 2", 1);
@@ -1683,8 +1622,7 @@ public class TestDeltaLakeBasic
     }
 
     @Test
-    void testDeletionVectorsRepeatWithSpecialCharsPartition()
-    {
+    void testDeletionVectorsRepeatWithSpecialCharsPartition() {
         try (TestTable table = newTrinoTable("test_dv", "(x bigint, y varchar) WITH (deletion_vectors_enabled = true, partitioned_by = ARRAY['y'])")) {
             assertUpdate("INSERT INTO " + table.getName() + " VALUES (1, 'white spaces'), (2, 'white spaces'), (3, 'white spaces')", 3);
             assertUpdate("DELETE FROM " + table.getName() + " WHERE x = 1", 1);
@@ -1696,15 +1634,13 @@ public class TestDeltaLakeBasic
 
     @Test
     void testDeletionVectorsPages()
-            throws Exception
-    {
+            throws Exception {
         testDeletionVectorsPages(true);
         testDeletionVectorsPages(false);
     }
 
     private void testDeletionVectorsPages(boolean parquetUseColumnIndex)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors_pages" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/deletion_vector_pages").toURI()).toPath(), tableLocation);
@@ -1725,8 +1661,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testUnsupportedVacuumDeletionVectors()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "deletion_vectors" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1743,8 +1678,7 @@ public class TestDeltaLakeBasic
 
     @Test // regression test for https://github.com/trinodb/trino/issues/28885
     public void testDeleteFromLargeParquetFile()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "delete_from_large_parquet_file_" + randomNameSuffix();
 
         Path tableLocation = catalogDir.resolve(tableName);
@@ -1766,8 +1700,7 @@ public class TestDeltaLakeBasic
      * @see deltalake.liquid_clustering
      */
     @Test
-    public void testLiquidClustering()
-    {
+    public void testLiquidClustering() {
         assertQuery("SELECT * FROM liquid_clustering", "VALUES ('test 1', 2024, 1), ('test 2', 2024, 2)");
         assertQuery("SELECT data FROM liquid_clustering WHERE year = 2024 AND month = 1", "VALUES 'test 1'");
         assertQuery("SELECT data FROM liquid_clustering WHERE year = 2024 AND month = 2", "VALUES 'test 2'");
@@ -1784,8 +1717,7 @@ public class TestDeltaLakeBasic
      * @see deltalake.uniform_hudi
      */
     @Test
-    public void testUniFormHudi()
-    {
+    public void testUniFormHudi() {
         assertQuery("SELECT * FROM uniform_hudi", "VALUES (123)");
         assertQueryFails("INSERT INTO uniform_hudi VALUES (456)", "\\QUnsupported universal formats: [hudi]");
         assertQueryFails("CALL system.vacuum(CURRENT_SCHEMA, 'uniform_hudi', '7d')", "\\QUnsupported universal formats: [hudi]");
@@ -1795,8 +1727,7 @@ public class TestDeltaLakeBasic
      * @see databricks133.uniform_iceberg_v1
      */
     @Test
-    public void testUniFormIcebergV1()
-    {
+    public void testUniFormIcebergV1() {
         assertQuery("SELECT * FROM uniform_iceberg_v1", "VALUES (1, 'test data')");
         assertQueryFails("INSERT INTO uniform_iceberg_v1 VALUES (2, 'new data')", "\\QUnsupported universal formats: [iceberg]");
     }
@@ -1805,8 +1736,7 @@ public class TestDeltaLakeBasic
      * @see databricks143.uniform_iceberg_v2
      */
     @Test
-    public void testUniFormIcebergV2()
-    {
+    public void testUniFormIcebergV2() {
         assertQuery("SELECT * FROM uniform_iceberg_v2", "VALUES (1, 'test data')");
         assertQueryFails("INSERT INTO uniform_iceberg_v2 VALUES (2, 'new data')", "\\QUnsupported universal formats: [iceberg]");
     }
@@ -1815,8 +1745,7 @@ public class TestDeltaLakeBasic
      * @see databricks153.variant
      */
     @Test
-    public void testVariant()
-    {
+    public void testVariant() {
         assertThat(query("DESCRIBE variant")).result().projected("Column", "Type")
                 .skippingTypesCheck()
                 .matches("VALUES " +
@@ -1843,8 +1772,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testVariantReadNull()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_variant_null_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks154/test_variant_null").toURI()).toPath(), tableLocation);
@@ -1865,11 +1793,11 @@ public class TestDeltaLakeBasic
         assertThat(query("TABLE " + tableName))
                 .skippingTypesCheck()
                 .matches("VALUES " +
-                         "(1, JSON '{\"a\":1}', MAP(ARRAY['key1'], ARRAY[NULL]))," +
-                         "(2, JSON '{\"a\":2}', MAP(ARRAY['key1'], ARRAY[JSON '{\"key\":\"value\"}']))," +
-                         "(3, JSON 'null', NULL)," +
-                         "(4, NULL, NULL)," +
-                         "(5, JSON '{\"a\":5}', NULL)");
+                        "(1, JSON '{\"a\":1}', MAP(ARRAY['key1'], ARRAY[NULL]))," +
+                        "(2, JSON '{\"a\":2}', MAP(ARRAY['key1'], ARRAY[JSON '{\"key\":\"value\"}']))," +
+                        "(3, JSON 'null', NULL)," +
+                        "(4, NULL, NULL)," +
+                        "(5, JSON '{\"a\":5}', NULL)");
     }
 
     /**
@@ -1877,8 +1805,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testVariantReadAfterOptimization()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_variant_read_after_optimization_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks154/variant_read_after_optimization").toURI()).toPath(), tableLocation);
@@ -1894,13 +1821,13 @@ public class TestDeltaLakeBasic
         assertThat(query("SELECT col_variant FROM " + tableName + " FOR VERSION AS OF 1"))
                 .matches(
                         """
-                        VALUES
-                        JSON '["a","b","c"]',
-                        JSON '[1,"a",true,null]',
-                        JSON '{"a":1,"b":2}',
-                        JSON '{"a":[1,2],"b":{"x":true}}',
-                        JSON '[{"x":1},{"y":"z"}]'
-                        """);
+                                VALUES
+                                JSON '["a","b","c"]',
+                                JSON '[1,"a",true,null]',
+                                JSON '{"a":1,"b":2}',
+                                JSON '{"a":[1,2],"b":{"x":true}}',
+                                JSON '[{"x":1},{"y":"z"}]'
+                                """);
         // works correctly with json_extract function
         assertThat(query("SELECT json_extract(col_variant, '$[1]') AS second_value FROM " + tableName + " FOR VERSION AS OF 1"))
                 .skippingTypesCheck()
@@ -1914,17 +1841,17 @@ public class TestDeltaLakeBasic
         assertThat(query("SELECT col_variant FROM " + tableName))
                 .matches(
                         """
-                        VALUES
-                        JSON '["a","b","c"]',
-                        JSON '[1,"a",true,null]',
-                        JSON '{"a":1,"b":2}',
-                        JSON '{"a":[1,2],"b":{"x":true}}',
-                        JSON '[{"x":1},{"y":"z"}]',
-                        JSON '{"nested":[{"x":1},2,null]}',
-                        JSON '{"deep":{"deeper_a":{"value":"va"}}}',
-                        JSON '{"deep":{"deeper_a":{"value":"vaa"},"deeper_b":{"value":"vbb"}}}',
-                        JSON '{"deep":{"deeper_c":{"value":"vc"}}}'
-                        """);
+                                VALUES
+                                JSON '["a","b","c"]',
+                                JSON '[1,"a",true,null]',
+                                JSON '{"a":1,"b":2}',
+                                JSON '{"a":[1,2],"b":{"x":true}}',
+                                JSON '[{"x":1},{"y":"z"}]',
+                                JSON '{"nested":[{"x":1},2,null]}',
+                                JSON '{"deep":{"deeper_a":{"value":"va"}}}',
+                                JSON '{"deep":{"deeper_a":{"value":"vaa"},"deeper_b":{"value":"vbb"}}}',
+                                JSON '{"deep":{"deeper_c":{"value":"vc"}}}'
+                                """);
         // works correctly with json_extract function
         assertThat(query("SELECT json_extract(col_variant, '$[1]') AS second_value FROM " + tableName))
                 .skippingTypesCheck()
@@ -1944,48 +1871,46 @@ public class TestDeltaLakeBasic
      * @see databricks153.variant_types
      */
     @Test
-    public void testVariantTypes()
-    {
+    public void testVariantTypes() {
         assertThat(query(
                 """
-                SELECT
-                 col_boolean,
-                 col_long,
-                 col_float,
-                 col_double,
-                 col_decimal,
-                 col_string,
-                 col_binary,
-                 col_date,
-                 col_timestamp,
-                 col_timestampntz,
-                 col_array,
-                 col_map,
-                 col_struct
-                FROM variant_types"""))
+                        SELECT
+                         col_boolean,
+                         col_long,
+                         col_float,
+                         col_double,
+                         col_decimal,
+                         col_string,
+                         col_binary,
+                         col_date,
+                         col_timestamp,
+                         col_timestampntz,
+                         col_array,
+                         col_map,
+                         col_struct
+                        FROM variant_types"""))
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                        ('true',
-                        '1',
-                        '0.2',
-                        '0.3',
-                        '0.4',
-                        '"test data"',
-                        '"ZWg/"',
-                        '"2021-02-03"',
-                        '"2001-08-21 19:02:03.321-06:00"',
-                        '"2021-01-02 12:34:56.123456"',
-                        '[1]',
-                        '{"key1":1,"key2":2}',
-                        '{"x":1}')""");
+                                VALUES
+                                ('true',
+                                '1',
+                                '0.2',
+                                '0.3',
+                                '0.4',
+                                '"test data"',
+                                '"ZWg/"',
+                                '"2021-02-03"',
+                                '"2001-08-21 19:02:03.321-06:00"',
+                                '"2021-01-02 12:34:56.123456"',
+                                '[1]',
+                                '{"key1":1,"key2":2}',
+                                '{"x":1}')""");
     }
 
     @Test
     public void testCorruptedManagedTableLocation()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "bad_person_" + randomNameSuffix();
         assertUpdate("CREATE TABLE " + tableName + " AS SELECT 1 id, 'person1' name", 1);
         String tableLocation = (String) computeScalar("SELECT DISTINCT regexp_replace(\"$path\", '/[^/]*$', '') FROM " + tableName);
@@ -1994,8 +1919,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testCorruptedExternalTableLocation()
-            throws Exception
-    {
+            throws Exception {
         // create a bad_person table which is based on person table in temporary location
         String tableName = "bad_person_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -2006,8 +1930,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testCorruptedTableLocation(String tableName, Path tableLocation, boolean isManaged)
-            throws Exception
-    {
+            throws Exception {
         Path transactionLogDirectory = tableLocation.resolve("_delta_log");
 
         // break the table by deleting all its files under transaction log
@@ -2059,8 +1982,7 @@ public class TestDeltaLakeBasic
         assertThat(getQueryRunner().tableExists(getSession(), tableName)).isFalse();
         if (isManaged) {
             assertThat(tableLocation.toFile()).doesNotExist().as("Table location should not exist");
-        }
-        else {
+        } else {
             assertThat(tableLocation.toFile()).exists().as("Table location should exist");
         }
     }
@@ -2069,27 +1991,26 @@ public class TestDeltaLakeBasic
      * @see deltalake.stats_with_minmax_nulls
      */
     @Test
-    public void testStatsWithMinMaxValuesAsNulls()
-    {
+    public void testStatsWithMinMaxValuesAsNulls() {
         assertQuery(
                 "SELECT * FROM stats_with_minmax_nulls",
                 """
-                VALUES
-                (0, 1),
-                (1, 2),
-                (3, 4),
-                (3, 7),
-                (NULL, NULL),
-                (NULL, NULL)
-                """);
+                        VALUES
+                        (0, 1),
+                        (1, 2),
+                        (3, 4),
+                        (3, 7),
+                        (NULL, NULL),
+                        (NULL, NULL)
+                        """);
         assertQuery(
                 "SHOW STATS FOR stats_with_minmax_nulls",
                 """
-                VALUES
-                ('id', null, null, 0.3333333333333333, null, 0, 3),
-                ('id2', null, null, 0.3333333333333333, null, 1, 7),
-                (null, null, null, null, 6.0, null, null)
-                """);
+                        VALUES
+                        ('id', null, null, 0.3333333333333333, null, 0, 3),
+                        ('id2', null, null, 0.3333333333333333, null, 1, 7),
+                        (null, null, null, null, 6.0, null, null)
+                        """);
     }
 
     /**
@@ -2097,8 +2018,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testReadMultipartCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_multipart_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/multipart_checkpoint").toURI()).toPath(), tableLocation);
@@ -2113,8 +2033,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testReadMultipartV2Checkpoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_multipart_v2_checkpoint_" + randomNameSuffix();
         Path tableLocation = Files.createTempFile(tableName, null);
         copyDirectoryContents(new File(Resources.getResource("deltalake/multipart_v2_checkpoint").toURI()).toPath(), tableLocation);
@@ -2126,8 +2045,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTimeTravelWithMultipartCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_time_travel_multipart_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/multipart_checkpoint").toURI()).toPath(), tableLocation);
@@ -2160,8 +2078,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTimeTravelWithV2Checkpoint()
-            throws Exception
-    {
+            throws Exception {
         testTimeTravelWithV2Checkpoint("deltalake/v2_checkpoint_json");
         testTimeTravelWithV2Checkpoint("deltalake/v2_checkpoint_parquet");
         testTimeTravelWithV2Checkpoint("databricks133/v2_checkpoint_json");
@@ -2169,8 +2086,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testTimeTravelWithV2Checkpoint(String resourceName)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_time_travel_v2_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource(resourceName).toURI()).toPath(), tableLocation);
@@ -2191,15 +2107,13 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTimeTravelWithV2CheckpointUsingTemporal()
-            throws Exception
-    {
+            throws Exception {
         testTimeTravelWithV2CheckpointWithTemporalVersion("deltalake/v2_checkpoint_json_using_temporal", "2025-01-30 13:14:58.530 UTC", "2025-01-30 13:15:05.942 UTC");
         testTimeTravelWithV2CheckpointWithTemporalVersion("deltalake/v2_checkpoint_parquet_using_temporal", "2025-01-31 02:35:49.788 UTC", "2025-01-31 02:36:28.433 UTC");
     }
 
     private void testTimeTravelWithV2CheckpointWithTemporalVersion(String resourceName, String v2TimestampWithZone, String v3TimestampWithZone)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_time_travel_v2_checkpoint_using_temporal_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource(resourceName).toURI()).toPath(), tableLocation);
@@ -2221,8 +2135,7 @@ public class TestDeltaLakeBasic
     // TODO: using session property to control the maxLinearSearchSize
     @Test
     public void testTemporalTimeTravelUtilParallelSearch()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_time_travel_util_parallel_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/v2_checkpoint_json_using_temporal").toURI()).toPath(), tableLocation);
@@ -2234,8 +2147,7 @@ public class TestDeltaLakeBasic
                     .hasMessage("No temporal version history at or before %s".formatted(Instant.ofEpochMilli(1738242898530L - 1L)));
             assertThat(findLatestVersionUsingTemporal(FILE_SYSTEM, tableLocation.toString(), 1738242898530L, executorService, 1)).isEqualTo(2);
             assertThat(findLatestVersionUsingTemporal(FILE_SYSTEM, tableLocation.toString(), 1738242905942L, executorService, 1)).isEqualTo(3);
-        }
-        finally {
+        } finally {
             assertUpdate("DROP TABLE " + tableName);
         }
     }
@@ -2245,8 +2157,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeltaLakeWithPartitionValuesParsed()
-            throws Exception
-    {
+            throws Exception {
         testPartitionValuesParsed("deltalake/partition_values_parsed");
     }
 
@@ -2255,14 +2166,12 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testTrinoWithoutPartitionValuesParsed()
-            throws Exception
-    {
+            throws Exception {
         testPartitionValuesParsed("trino432/partition_values_parsed");
     }
 
     private void testPartitionValuesParsed(String resourceName)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_partition_values_parsed_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource(resourceName).toURI()).toPath(), tableLocation);
@@ -2294,8 +2203,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testCheckpointFilteringForParsedStatsContainingNestedRows()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_parsed_stats_struct_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks133/parsed_stats_struct").toURI()).toPath(), tableLocation);
@@ -2305,12 +2213,12 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                        (100, 1, row(1, 'ala')),
-                        (200, 2, row(2, 'kota')),
-                        (300, 3, row(3, 'osla')),
-                        (400, 4, row(4, 'zulu'))
-                        """);
+                                VALUES
+                                (100, 1, row(1, 'ala')),
+                                (200, 2, row(2, 'kota')),
+                                (300, 3, row(3, 'osla')),
+                                (400, 4, row(4, 'zulu'))
+                                """);
 
         assertThat(query("SELECT id FROM " + tableName + " WHERE part BETWEEN 100 AND 300")).matches("VALUES 1, 2, 3");
         assertThat(query("SELECT root.entry_two FROM " + tableName + " WHERE part BETWEEN 100 AND 300"))
@@ -2321,10 +2229,10 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                        ('id', NULL, NULL, DOUBLE '0.0' , NULL, '1', '1'),
-                        (NULL, NULL, NULL, NULL, DOUBLE '1.0', NULL, NULL)
-                        """);
+                                VALUES
+                                ('id', NULL, NULL, DOUBLE '0.0' , NULL, '1', '1'),
+                                (NULL, NULL, NULL, NULL, DOUBLE '1.0', NULL, NULL)
+                                """);
     }
 
     /**
@@ -2332,8 +2240,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testCheckpointFilteringForParsedStatsWithCaseSensitiveColumnNames()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_parsed_stats_case_sensitive_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks133/parsed_stats_case_sensitive").toURI()).toPath(), tableLocation);
@@ -2343,12 +2250,12 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                        (100, 1, 'ala'),
-                        (200, 2, 'kota'),
-                        (300, 3, 'osla'),
-                        (400, 4, 'zulu')
-                        """);
+                                VALUES
+                                (100, 1, 'ala'),
+                                (200, 2, 'kota'),
+                                (300, 3, 'osla'),
+                                (400, 4, 'zulu')
+                                """);
 
         assertThat(query("SELECT a_NuMbEr FROM " + tableName + " WHERE part BETWEEN 100 AND 300")).matches("VALUES 1, 2, 3");
         assertThat(query("SELECT a_StRiNg FROM " + tableName + " WHERE part BETWEEN 100 AND 300"))
@@ -2359,10 +2266,10 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                        ('a_NuMbEr', NULL, NULL, DOUBLE '0.0' , NULL, '1', '3'),
-                        (NULL, NULL, NULL, NULL, DOUBLE '3.0', NULL, NULL)
-                        """);
+                                VALUES
+                                ('a_NuMbEr', NULL, NULL, DOUBLE '0.0' , NULL, '1', '3'),
+                                (NULL, NULL, NULL, NULL, DOUBLE '3.0', NULL, NULL)
+                                """);
     }
 
     /**
@@ -2370,8 +2277,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeltaLakeWithPartitionValuesParsedAllTypes()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_partition_values_parsed_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/partition_values_parsed_all_types").toURI()).toPath(), tableLocation);
@@ -2411,8 +2317,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeltaLakeWritePartitionValuesParsedAllTypesInCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_write_partition_values_parsed_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/partition_values_parsed_all_types").toURI()).toPath(), tableLocation);
@@ -2422,11 +2327,11 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                            (1, true, TINYINT '1', SMALLINT '10', 100, BIGINT '1000', CAST('123.12' AS DECIMAL(5,2)), CAST('123456789012345678.123' AS DECIMAL(21,3)), DOUBLE '1.2', REAL '3.4', 'a', DATE '2020-08-21', TIMESTAMP '2020-10-21 01:00:00.123 UTC', TIMESTAMP '2023-01-02 01:02:03.456'),
-                            (2, false, TINYINT '2', SMALLINT '20', 200, BIGINT '2000', CAST('223.12' AS DECIMAL (5,2)), CAST('223456789012345678.123' AS DECIMAL(21,3)), DOUBLE '10.2', REAL '30.4', 'b', DATE '2020-08-22', TIMESTAMP '2020-10-22 01:00:00.123 UTC', TIMESTAMP '2023-01-03 01:02:03.456'),
-                            (3, null, null, null, null, null, null, null, null, null, null, null, null, null)
-                        """);
+                                VALUES
+                                    (1, true, TINYINT '1', SMALLINT '10', 100, BIGINT '1000', CAST('123.12' AS DECIMAL(5,2)), CAST('123456789012345678.123' AS DECIMAL(21,3)), DOUBLE '1.2', REAL '3.4', 'a', DATE '2020-08-21', TIMESTAMP '2020-10-21 01:00:00.123 UTC', TIMESTAMP '2023-01-02 01:02:03.456'),
+                                    (2, false, TINYINT '2', SMALLINT '20', 200, BIGINT '2000', CAST('223.12' AS DECIMAL (5,2)), CAST('223456789012345678.123' AS DECIMAL(21,3)), DOUBLE '10.2', REAL '30.4', 'b', DATE '2020-08-22', TIMESTAMP '2020-10-22 01:00:00.123 UTC', TIMESTAMP '2023-01-03 01:02:03.456'),
+                                    (3, null, null, null, null, null, null, null, null, null, null, null, null, null)
+                                """);
 
         // Create a new checkpoint
         assertUpdate("INSERT INTO " + tableName + " VALUES (4, false, TINYINT '4', SMALLINT '40', 400, BIGINT '4000', CAST('444.44' AS DECIMAL(5,2)), CAST('4444444.444' AS DECIMAL(21,3)), DOUBLE '4.4', REAL '4.4', 'd', DATE '2020-08-24', TIMESTAMP '2020-10-24 01:00:00.123 UTC', TIMESTAMP '2023-01-04 01:02:03.456')", 1);
@@ -2437,34 +2342,34 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                            (1, true, TINYINT '1', SMALLINT '10', 100, BIGINT '1000', CAST('123.12' AS DECIMAL(5,2)), CAST('123456789012345678.123' AS DECIMAL(21,3)), DOUBLE '1.2', REAL '3.4', 'a', DATE '2020-08-21', TIMESTAMP '2020-10-21 01:00:00.123 UTC', TIMESTAMP '2023-01-02 01:02:03.456'),
-                            (2, false, TINYINT '2', SMALLINT '20', 200, BIGINT '2000', CAST('223.12' AS DECIMAL (5,2)), CAST('223456789012345678.123' AS DECIMAL(21,3)), DOUBLE '10.2', REAL '30.4', 'b', DATE '2020-08-22', TIMESTAMP '2020-10-22 01:00:00.123 UTC', TIMESTAMP '2023-01-03 01:02:03.456'),
-                            (3, null, null, null, null, null, null, null, null, null, null, null, null, null),
-                            (4, false, TINYINT '4', SMALLINT '40', 400, BIGINT '4000', CAST('444.44' AS DECIMAL(5,2)), CAST('4444444.444' AS DECIMAL(21,3)), DOUBLE '4.4', REAL '4.4', 'd', DATE '2020-08-24', TIMESTAMP '2020-10-24 01:00:00.123 UTC', TIMESTAMP '2023-01-04 01:02:03.456'),
-                            (5, false, TINYINT '5', SMALLINT '50', 500, BIGINT '5000', CAST('555.5' AS DECIMAL(5,2)), CAST('55555.55' AS DECIMAL(21,3)), DOUBLE '5.55', REAL '5.5555', 'd', DATE '2020-08-25', TIMESTAMP '2020-10-25 01:00:00.123 UTC', TIMESTAMP '2023-01-05 01:02:03.456'),
-                            (6, null, null, null, null, null, null, null, null, null, null, null, null, null)
-                        """);
+                                VALUES
+                                    (1, true, TINYINT '1', SMALLINT '10', 100, BIGINT '1000', CAST('123.12' AS DECIMAL(5,2)), CAST('123456789012345678.123' AS DECIMAL(21,3)), DOUBLE '1.2', REAL '3.4', 'a', DATE '2020-08-21', TIMESTAMP '2020-10-21 01:00:00.123 UTC', TIMESTAMP '2023-01-02 01:02:03.456'),
+                                    (2, false, TINYINT '2', SMALLINT '20', 200, BIGINT '2000', CAST('223.12' AS DECIMAL (5,2)), CAST('223456789012345678.123' AS DECIMAL(21,3)), DOUBLE '10.2', REAL '30.4', 'b', DATE '2020-08-22', TIMESTAMP '2020-10-22 01:00:00.123 UTC', TIMESTAMP '2023-01-03 01:02:03.456'),
+                                    (3, null, null, null, null, null, null, null, null, null, null, null, null, null),
+                                    (4, false, TINYINT '4', SMALLINT '40', 400, BIGINT '4000', CAST('444.44' AS DECIMAL(5,2)), CAST('4444444.444' AS DECIMAL(21,3)), DOUBLE '4.4', REAL '4.4', 'd', DATE '2020-08-24', TIMESTAMP '2020-10-24 01:00:00.123 UTC', TIMESTAMP '2023-01-04 01:02:03.456'),
+                                    (5, false, TINYINT '5', SMALLINT '50', 500, BIGINT '5000', CAST('555.5' AS DECIMAL(5,2)), CAST('55555.55' AS DECIMAL(21,3)), DOUBLE '5.55', REAL '5.5555', 'd', DATE '2020-08-25', TIMESTAMP '2020-10-25 01:00:00.123 UTC', TIMESTAMP '2023-01-05 01:02:03.456'),
+                                    (6, null, null, null, null, null, null, null, null, null, null, null, null, null)
+                                """);
 
         assertThat(query(
                 """
-                SELECT id
-                FROM %s
-                WHERE
-                    part_boolean = true AND
-                    part_tinyint = TINYINT '1' AND
-                    part_smallint= SMALLINT '10' AND
-                    part_int = 100 AND
-                    part_bigint = BIGINT '1000' AND
-                    part_short_decimal = CAST('123.12' AS DECIMAL(5,2)) AND
-                    part_long_decimal = CAST('123456789012345678.123' AS DECIMAL(21,3)) AND
-                    part_double = DOUBLE '1.2' AND
-                    part_float = REAL '3.4' AND
-                    part_varchar = 'a' AND
-                    part_date = DATE '2020-08-21' AND
-                    part_timestamp = TIMESTAMP '2020-10-21 01:00:00.123 UTC' AND
-                    part_timestamp_ntz =TIMESTAMP '2023-01-02 01:02:03.456'\
-                    """.formatted(tableName)))
+                        SELECT id
+                        FROM %s
+                        WHERE
+                            part_boolean = true AND
+                            part_tinyint = TINYINT '1' AND
+                            part_smallint= SMALLINT '10' AND
+                            part_int = 100 AND
+                            part_bigint = BIGINT '1000' AND
+                            part_short_decimal = CAST('123.12' AS DECIMAL(5,2)) AND
+                            part_long_decimal = CAST('123456789012345678.123' AS DECIMAL(21,3)) AND
+                            part_double = DOUBLE '1.2' AND
+                            part_float = REAL '3.4' AND
+                            part_varchar = 'a' AND
+                            part_date = DATE '2020-08-21' AND
+                            part_timestamp = TIMESTAMP '2020-10-21 01:00:00.123 UTC' AND
+                            part_timestamp_ntz =TIMESTAMP '2023-01-02 01:02:03.456'\
+                        """.formatted(tableName)))
                 .matches("VALUES 1");
     }
 
@@ -2473,8 +2378,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testDeltaLakeWritePartitionValuesParsedCaseSensitiveInCheckpoint()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_write_partition_values_parsed_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("databricks133/partition_values_parsed_case_sensitive").toURI()).toPath(), tableLocation);
@@ -2484,11 +2388,11 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                            (100, 1, 'ala'),
-                            (200, 2,'kota'),
-                            (300, 3, 'osla')
-                        """);
+                                VALUES
+                                    (100, 1, 'ala'),
+                                    (200, 2,'kota'),
+                                    (300, 3, 'osla')
+                                """);
 
         // Create a new checkpoint
         assertUpdate("INSERT INTO " + tableName + " VALUES (400, 4, 'kon')", 1);
@@ -2496,26 +2400,24 @@ public class TestDeltaLakeBasic
                 .skippingTypesCheck()
                 .matches(
                         """
-                        VALUES
-                            (100, 1, 'ala'),
-                            (200, 2,'kota'),
-                            (300, 3, 'osla'),
-                            (400, 4, 'kon')
-                        """);
+                                VALUES
+                                    (100, 1, 'ala'),
+                                    (200, 2,'kota'),
+                                    (300, 3, 'osla'),
+                                    (400, 4, 'kon')
+                                """);
         assertThat(query("SELECT id FROM " + tableName + " WHERE part_NuMbEr = 1 AND part_StRiNg = 'ala'"))
                 .matches("VALUES 100");
     }
 
-    private void assertPartitionValuesParsedCondition(String tableName, int id, @Language("SQL") String condition)
-    {
+    private void assertPartitionValuesParsedCondition(String tableName, int id, @Language("SQL") String condition) {
         assertThat(query("SELECT id FROM " + tableName + " WHERE " + condition))
                 .matches("VALUES " + id);
     }
 
     @Test
     public void testReadV2Checkpoint()
-            throws Exception
-    {
+            throws Exception {
         testReadV2Checkpoint("deltalake/v2_checkpoint_json");
         testReadV2Checkpoint("deltalake/v2_checkpoint_parquet");
         testReadV2Checkpoint("databricks133/v2_checkpoint_json");
@@ -2523,8 +2425,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testReadV2Checkpoint(String resourceName)
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_v2_checkpoint_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         Path source = new File(Resources.getResource(resourceName).toURI()).toPath();
@@ -2561,8 +2462,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTypeWidening()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_type_widening_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/type_widening").toURI()).toPath(), tableLocation);
@@ -2591,8 +2491,7 @@ public class TestDeltaLakeBasic
      * @see databricks153.type_widening_partition
      */
     @Test
-    public void testTypeWideningNotSkippingUnsupportedPartitionColumns()
-    {
+    public void testTypeWideningNotSkippingUnsupportedPartitionColumns() {
         assertThat(query("DESCRIBE type_widening_partition")).result().projected("Column", "Type")
                 .skippingTypesCheck()
                 .matches("VALUES ('col', 'tinyint'), " +
@@ -2673,8 +2572,7 @@ public class TestDeltaLakeBasic
      * @see databricks153.type_widening
      */
     @Test
-    public void testTypeWideningSkippingUnsupportedColumns()
-    {
+    public void testTypeWideningSkippingUnsupportedColumns() {
         assertQuery("SELECT * FROM type_widening FOR VERSION AS OF 1", "VALUES (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.0, 1, DATE '2024-06-19')");
         assertThat(query("DESCRIBE type_widening")).result().projected("Column", "Type")
                 .skippingTypesCheck()
@@ -2686,8 +2584,7 @@ public class TestDeltaLakeBasic
      * @see databricks153.type_widening_nested
      */
     @Test
-    public void testTypeWideningSkippingUnsupportedNested()
-    {
+    public void testTypeWideningSkippingUnsupportedNested() {
         assertThat(query("DESCRIBE type_widening_nested")).result().projected("Column", "Type")
                 .skippingTypesCheck()
                 .isEmpty();
@@ -2714,8 +2611,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTypeWideningNested()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_type_widening_nestd_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/type_widening_nested").toURI()).toPath(), tableLocation);
@@ -2759,8 +2655,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testTypeWideningUnsupported()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "test_type_widening_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/type_widening_unsupported").toURI()).toPath(), tableLocation);
@@ -2774,8 +2669,7 @@ public class TestDeltaLakeBasic
      * @see deltalake.unsupported_writer_feature
      */
     @Test
-    public void testUnsupportedWriterFeature()
-    {
+    public void testUnsupportedWriterFeature() {
         assertQueryReturnsEmptyResult("SELECT * FROM unsupported_writer_feature");
 
         assertQueryFails(
@@ -2811,8 +2705,7 @@ public class TestDeltaLakeBasic
      * @see deltalake.unsupported_writer_version
      */
     @Test
-    public void testUnsupportedWriterVersion()
-    {
+    public void testUnsupportedWriterVersion() {
         assertQueryReturnsEmptyResult("SELECT * FROM unsupported_writer_version");
 
         assertQueryFails(
@@ -2837,8 +2730,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testReadInCommitTimestampInHistoryTable()
-            throws Exception
-    {
+            throws Exception {
         String tableName = "in_commit_timestamp_history_read_" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
         copyDirectoryContents(new File(Resources.getResource("deltalake/in_commit_timestamp_history_read").toURI()).toPath(), tableLocation);
@@ -2856,8 +2748,7 @@ public class TestDeltaLakeBasic
      */
     @Test
     public void testMergeOnClonedTable()
-            throws Exception
-    {
+            throws Exception {
         testMergeOnClonedTable(
                 "deltalake/clone_merge/clone_merge_source",
                 "deltalake/clone_merge/clone_merge_cloned",
@@ -2871,8 +2762,7 @@ public class TestDeltaLakeBasic
     }
 
     private void testMergeOnClonedTable(String sourceResourceName, String clonedResourceName, String sourceTableDir, String oldSchemaTableName)
-            throws Exception
-    {
+            throws Exception {
         String sourceTable = sourceTableDir + randomNameSuffix();
         // load source table to a random suffix sub dir of the catalogDir
         Path sourceLocation = catalogDir.resolve("clone_test_dir" + randomNameSuffix()).resolve(sourceTableDir);
@@ -2881,13 +2771,13 @@ public class TestDeltaLakeBasic
         assertUpdate("CALL system.register_table(CURRENT_SCHEMA, '%s', '%s')".formatted(sourceTable, sourceLocation.toUri()));
 
         @Language("SQL") String sourceTableValues =
-        """
-        VALUES
-        (1, 'A', TIMESTAMP '2024-01-01'),
-        (2, 'B', TIMESTAMP '2024-01-01'),
-        (3, 'C', TIMESTAMP '2024-02-02'),
-        (4, 'D', TIMESTAMP '2024-02-02')
-        """;
+                """
+                        VALUES
+                        (1, 'A', TIMESTAMP '2024-01-01'),
+                        (2, 'B', TIMESTAMP '2024-01-01'),
+                        (3, 'C', TIMESTAMP '2024-02-02'),
+                        (4, 'D', TIMESTAMP '2024-02-02')
+                        """;
 
         assertQuery("SELECT * FROM " + sourceTable, sourceTableValues);
 
@@ -2906,35 +2796,35 @@ public class TestDeltaLakeBasic
 
         // update on cloned table
         @Language("SQL") String expectedValuesAfterUpdate =
-        """
-                VALUES
-                (1, 'A', TIMESTAMP '2024-01-01'),
-                (2, 'updated', TIMESTAMP '2024-01-01'),
-                (3, 'C', TIMESTAMP '2024-02-02'),
-                (4, 'updated', TIMESTAMP '2024-02-02')
-        """;
+                """
+                                VALUES
+                                (1, 'A', TIMESTAMP '2024-01-01'),
+                                (2, 'updated', TIMESTAMP '2024-01-01'),
+                                (3, 'C', TIMESTAMP '2024-02-02'),
+                                (4, 'updated', TIMESTAMP '2024-02-02')
+                        """;
         assertUpdate("UPDATE " + clonedTable + " SET v = 'updated' WHERE id IN (2, 4)", 2);
         assertQuery("SELECT * FROM " + clonedTable, expectedValuesAfterUpdate);
 
         // merge on cloned table, including insert,update,delete
         String mergeSql =
-        """
-        MERGE INTO %s t
-        USING (VALUES (1, 'yyy', TIMESTAMP '2025-01-01'), (2, 'merged', TIMESTAMP '2025-02-02'), (5, 'kkk', TIMESTAMP '2025-03-03')) AS s(id, v, part)
-        ON (t.id = s.id)
-        WHEN MATCHED AND s.v = 'yyy' THEN DELETE
-        WHEN MATCHED THEN UPDATE SET v = s.v
-        WHEN NOT MATCHED THEN INSERT (id, v, part) VALUES(s.id, s.v, s.part)
-        """.formatted(clonedTable);
+                """
+                        MERGE INTO %s t
+                        USING (VALUES (1, 'yyy', TIMESTAMP '2025-01-01'), (2, 'merged', TIMESTAMP '2025-02-02'), (5, 'kkk', TIMESTAMP '2025-03-03')) AS s(id, v, part)
+                        ON (t.id = s.id)
+                        WHEN MATCHED AND s.v = 'yyy' THEN DELETE
+                        WHEN MATCHED THEN UPDATE SET v = s.v
+                        WHEN NOT MATCHED THEN INSERT (id, v, part) VALUES(s.id, s.v, s.part)
+                        """.formatted(clonedTable);
 
         @Language("SQL") String expectedValuesAfterMerge =
-        """
-        VALUES
-        (2, 'merged', TIMESTAMP '2024-01-01'),
-        (3, 'C', TIMESTAMP '2024-02-02'),
-        (4, 'updated', TIMESTAMP '2024-02-02'),
-        (5, 'kkk', TIMESTAMP '2025-03-03')
-        """;
+                """
+                        VALUES
+                        (2, 'merged', TIMESTAMP '2024-01-01'),
+                        (3, 'C', TIMESTAMP '2024-02-02'),
+                        (4, 'updated', TIMESTAMP '2024-02-02'),
+                        (5, 'kkk', TIMESTAMP '2025-03-03')
+                        """;
 
         assertUpdate(mergeSql, 3);
         assertQuery("SELECT * FROM " + clonedTable, expectedValuesAfterMerge);
@@ -2944,8 +2834,7 @@ public class TestDeltaLakeBasic
     }
 
     public static void updateClonedTableDeletionVectorPathPrefixAndSource(Path location, String newPrefix, String oldSchemaTableName, String newSchemaTableName)
-            throws IOException
-    {
+            throws IOException {
         String oldPrefix = "s3://test-bucket/tiny/clone_merge_deletion_vector_source";
         Pattern pattern = Pattern.compile("(?<=\"(pathOrInlineDv|path)\":\")" + Pattern.quote(oldPrefix));
 
@@ -2963,8 +2852,7 @@ public class TestDeltaLakeBasic
                             if (!content.equals(newContent)) {
                                 Files.write(file, newContent.getBytes(StandardCharsets.UTF_8), StandardOpenOption.TRUNCATE_EXISTING);
                             }
-                        }
-                        catch (IOException e) {
+                        } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     });
@@ -2972,8 +2860,7 @@ public class TestDeltaLakeBasic
     }
 
     private static MetadataEntry loadMetadataEntry(long entryNumber, Path tableLocation)
-            throws IOException
-    {
+            throws IOException {
         DeltaLakeTransactionLogEntry transactionLog = getEntriesFromJson(entryNumber, tableLocation.resolve("_delta_log").toString()).stream()
                 .filter(log -> log.getMetaData() != null)
                 .collect(onlyElement());
@@ -2982,8 +2869,7 @@ public class TestDeltaLakeBasic
 
     @Test
     public void testDeepClonedTableWithCheckpointVersionZero()
-            throws Exception
-    {
+            throws Exception {
         String resource = "databricks154/clone_checkpoint_version_zero/checkpoint_v2/deep_cloned_table";
         String tableName = "test_deep_cloned_table" + randomNameSuffix();
         Path tableLocation = catalogDir.resolve(tableName);
@@ -2993,18 +2879,17 @@ public class TestDeltaLakeBasic
         assertThat(query("SELECT * FROM " + tableName))
                 .matches(
                         """
-                        VALUES
-                        (1, VARCHAR 'Alice', 25),
-                        (2, VARCHAR 'Bob', 30),
-                        (3, VARCHAR 'Charlie', 28)
-                        """);
+                                VALUES
+                                (1, VARCHAR 'Alice', 25),
+                                (2, VARCHAR 'Bob', 30),
+                                (3, VARCHAR 'Charlie', 28)
+                                """);
         assertUpdate("DROP TABLE " + tableName);
     }
 
     @Test
     public void testShallowClonedTableWithCheckpointVersionZero()
-            throws Exception
-    {
+            throws Exception {
         String resource = "databricks154/clone_checkpoint_version_zero/checkpoint_v2/shallow_cloned_table";
         String dataFileResource = "databricks154/clone_checkpoint_version_zero/checkpoint_v2/clone_source/part-00000-d47cc824-9a87-40c6-9e6b-528d933a30f9-c000.snappy.parquet";
         String tableName = "test_shallow_cloned_table" + randomNameSuffix();
@@ -3018,25 +2903,23 @@ public class TestDeltaLakeBasic
         assertThat(query("SELECT * FROM " + tableName))
                 .matches(
                         """
-                        VALUES
-                        (1, VARCHAR 'Alice', 25),
-                        (2, VARCHAR 'Bob', 30),
-                        (3, VARCHAR 'Charlie', 28)
-                        """);
+                                VALUES
+                                (1, VARCHAR 'Alice', 25),
+                                (2, VARCHAR 'Bob', 30),
+                                (3, VARCHAR 'Charlie', 28)
+                                """);
         assertUpdate("DROP TABLE " + tableName);
     }
 
     private static ProtocolEntry loadProtocolEntry(long entryNumber, Path tableLocation)
-            throws IOException
-    {
+            throws IOException {
         DeltaLakeTransactionLogEntry transactionLog = getEntriesFromJson(entryNumber, tableLocation.resolve("_delta_log").toString()).stream()
                 .filter(log -> log.getProtocol() != null)
                 .collect(onlyElement());
         return transactionLog.getProtocol();
     }
 
-    private String getTableLocation(String tableName)
-    {
+    private String getTableLocation(String tableName) {
         Pattern locationPattern = Pattern.compile(".*location = '(.*?)'.*", Pattern.DOTALL);
         Matcher m = locationPattern.matcher((String) computeActual("SHOW CREATE TABLE " + tableName).getOnlyValue());
         if (m.find()) {
@@ -3048,15 +2931,14 @@ public class TestDeltaLakeBasic
     }
 
     private static List<DeltaLakeTransactionLogEntry> getEntriesFromJson(long entryNumber, String transactionLogDir)
-            throws IOException
-    {
+            throws IOException {
         return TransactionLogTail.getEntriesFromJson(entryNumber, FILE_SYSTEM.newInputFile(getTransactionLogJsonEntryPath(transactionLogDir, entryNumber)), DEFAULT_TRANSACTION_LOG_MAX_CACHED_SIZE)
                 .orElseThrow()
                 .getEntriesList(FILE_SYSTEM);
     }
+
     @Test
-    public void testTimestampWithTimeZoneMicrosecondPrecision()
-    {
+    public void testTimestampWithTimeZoneMicrosecondPrecision() {
         String tableName = "test_timestamp_micros_" + randomNameSuffix();
         assertUpdate(
                 "CREATE TABLE " + tableName + " (id INT, ts TIMESTAMP(6) WITH TIME ZONE) " +
@@ -3080,15 +2962,13 @@ public class TestDeltaLakeBasic
             assertThat((String) computeScalar("SELECT data_type FROM information_schema.columns " +
                     "WHERE table_name = '" + tableName + "' AND column_name = 'ts'"))
                     .isEqualTo("timestamp(6) with time zone");
-        }
-        finally {
+        } finally {
             assertUpdate("DROP TABLE " + tableName);
         }
     }
 
     @Test
-    public void testTimestampWithTimeZoneLegacyMillisPrecision()
-    {
+    public void testTimestampWithTimeZoneLegacyMillisPrecision() {
         // Table written by an older Trino version using TIMESTAMP(MILLIS) parquet encoding
         // Microsecond digits should be zero but no exception should be thrown
         assertQuery(
@@ -3099,3 +2979,4 @@ public class TestDeltaLakeBasic
                 "WHERE table_schema = 'testdb' AND table_name = 'legacy_millis_timestamp' AND column_name = 'ts'"))
                 .isEqualTo("timestamp(6) with time zone");
     }
+}
