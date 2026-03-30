@@ -3060,7 +3060,7 @@ public class TestDeltaLakeBasic
         String tableName = "test_timestamp_micros_" + randomNameSuffix();
         assertUpdate(
                 "CREATE TABLE " + tableName + " (id INT, ts TIMESTAMP(6) WITH TIME ZONE) " +
-                        "WITH (location = '" + tempDirPath() + "')");
+                        "WITH (location = '" + System.getProperty("java.io.tmpdir") + "/" + tableName + "')");
         try {
             // Insert values with full microsecond precision
             assertUpdate("INSERT INTO " + tableName + " VALUES " +
@@ -3077,13 +3077,15 @@ public class TestDeltaLakeBasic
                             "(3, TIMESTAMP '9999-12-31 23:59:59.999999 UTC')");
 
             // Verify the column type is reported as precision 6
-            assertThat(getColumnType(tableName, "ts"))
+            assertThat((String) computeScalar("SELECT data_type FROM information_schema.columns " +
+                    "WHERE table_name = '" + tableName + "' AND column_name = 'ts'"))
                     .isEqualTo("timestamp(6) with time zone");
         }
         finally {
             assertUpdate("DROP TABLE " + tableName);
         }
     }
+
     @Test
     public void testTimestampWithTimeZoneLegacyMillisPrecision()
     {
@@ -3093,8 +3095,7 @@ public class TestDeltaLakeBasic
                 "SELECT ts FROM delta.testdb.legacy_millis_timestamp LIMIT 1",
                 "VALUES TIMESTAMP '2024-01-12 09:30:47.405000 UTC'");
 
-        assertThat(getColumnType("delta.testdb.legacy_millis_timestamp", "ts"))
+        assertThat((String) computeScalar("SELECT data_type FROM information_schema.columns " +
+                "WHERE table_schema = 'testdb' AND table_name = 'legacy_millis_timestamp' AND column_name = 'ts'"))
                 .isEqualTo("timestamp(6) with time zone");
     }
-}
-
