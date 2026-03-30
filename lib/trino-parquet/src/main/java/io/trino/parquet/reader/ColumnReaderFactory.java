@@ -230,7 +230,7 @@ public final class ColumnReaderFactory
                 };
             }
             return switch (timestampAnnotation.getUnit()) {
-                case MILLIS -> createColumnReader(field, valueDecoders::getInt64TimestampMillsToLongTimestampWithTimeZoneDecoder, FIXED12_ADAPTER, memoryContext);
+                case MILLIS -> createColumnReader(field, valueDecoders::getInt64TimestampMillisToLongTimestampWithTimeZoneDecoder, FIXED12_ADAPTER, memoryContext);
                 case MICROS -> createColumnReader(field, valueDecoders::getInt64TimestampMicrosToLongTimestampWithTimeZoneDecoder, FIXED12_ADAPTER, memoryContext);
                 case NANOS -> createColumnReader(field, valueDecoders::getInt64TimestampNanosToLongTimestampWithTimeZoneDecoder, FIXED12_ADAPTER, memoryContext);
             };
