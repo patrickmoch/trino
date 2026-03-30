@@ -3099,3 +3099,5 @@ public class TestDeltaLakeBasic
                 "WHERE table_schema = 'testdb' AND table_name = 'legacy_millis_timestamp' AND column_name = 'ts'"))
                 .isEqualTo("timestamp(6) with time zone");
     }
+}
+
